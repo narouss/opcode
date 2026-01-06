@@ -34,7 +34,7 @@ jobs:
       
       - name: Prepare artifacts
         run: |
-          mkdir dist
+          New-Item -ItemType Directory -Force -Path dist
           cp src-tauri/target/release/bundle/nsis/*.exe dist/
           cp src-tauri/target/release/bundle/msi/*.msi dist/
 
