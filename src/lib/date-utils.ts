@@ -1,14 +1,25 @@
+import i18n from '@/lib/i18n';
+
+/**
+ * 获取当前语言的 locale 代码
+ */
+function getLocale(): string {
+  const lang = i18n.language || 'zh-CN';
+  return lang === 'zh-CN' ? 'zh-CN' : 'en-US';
+}
+
 /**
  * Formats a Unix timestamp to a human-readable date string
  * @param timestamp - Unix timestamp in seconds
  * @returns Formatted date string
  * 
  * @example
- * formatUnixTimestamp(1735555200) // "Dec 30, 2024"
+ * formatUnixTimestamp(1735555200) // "12月30日" or "Dec 30, 2024"
  */
 export function formatUnixTimestamp(timestamp: number): string {
   const date = new Date(timestamp * 1000);
   const now = new Date();
+  const locale = getLocale();
   
   // If it's today, show time
   if (isToday(date)) {
@@ -17,7 +28,8 @@ export function formatUnixTimestamp(timestamp: number): string {
   
   // If it's yesterday
   if (isYesterday(date)) {
-    return `Yesterday, ${formatTime(date)}`;
+    const yesterday = locale === 'zh-CN' ? '昨天' : 'Yesterday';
+    return `${yesterday}, ${formatTime(date)}`;
   }
   
   // If it's within the last week, show day of week
@@ -27,14 +39,14 @@ export function formatUnixTimestamp(timestamp: number): string {
   
   // If it's this year, don't show year
   if (date.getFullYear() === now.getFullYear()) {
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString(locale, { 
       month: 'short', 
       day: 'numeric' 
     });
   }
   
   // Otherwise show full date
-  return date.toLocaleDateString('en-US', { 
+  return date.toLocaleDateString(locale, { 
     month: 'short', 
     day: 'numeric',
     year: 'numeric'
@@ -47,7 +59,7 @@ export function formatUnixTimestamp(timestamp: number): string {
  * @returns Formatted date string
  * 
  * @example
- * formatISOTimestamp("2025-01-04T10:13:29.000Z") // "Jan 4, 2025"
+ * formatISOTimestamp("2025-01-04T10:13:29.000Z") // "1月4日" or "Jan 4, 2025"
  */
 export function formatISOTimestamp(isoString: string): string {
   const date = new Date(isoString);
@@ -77,10 +89,11 @@ export function getFirstLine(text: string): string {
 
 // Helper functions
 function formatTime(date: Date): string {
-  return date.toLocaleTimeString('en-US', { 
+  const locale = getLocale();
+  return date.toLocaleTimeString(locale, { 
     hour: 'numeric', 
     minute: '2-digit',
-    hour12: true 
+    hour12: locale !== 'zh-CN'
   });
 }
 
@@ -102,21 +115,24 @@ function isWithinWeek(date: Date): boolean {
 }
 
 function getDayName(date: Date): string {
-  return date.toLocaleDateString('en-US', { weekday: 'long' });
+  const locale = getLocale();
+  return date.toLocaleDateString(locale, { weekday: 'long' });
 }
 
 /**
- * Formats a timestamp to a relative time string (e.g., "2 hours ago", "3 days ago")
+ * Formats a timestamp to a relative time string (e.g., "2小时前", "3天前")
  * @param timestamp - Unix timestamp in milliseconds
  * @returns Relative time string
  * 
  * @example
- * formatTimeAgo(Date.now() - 3600000) // "1 hour ago"
- * formatTimeAgo(Date.now() - 86400000) // "1 day ago"
+ * formatTimeAgo(Date.now() - 3600000) // "1小时前" or "1 hour ago"
+ * formatTimeAgo(Date.now() - 86400000) // "1天前" or "1 day ago"
  */
 export function formatTimeAgo(timestamp: number): string {
   const now = Date.now();
   const diff = now - timestamp;
+  const locale = getLocale();
+  const isZh = locale === 'zh-CN';
   
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);
@@ -127,26 +143,27 @@ export function formatTimeAgo(timestamp: number): string {
   const years = Math.floor(days / 365);
   
   if (years > 0) {
-    return years === 1 ? '1 year ago' : `${years} years ago`;
+    return isZh ? `${years}年前` : (years === 1 ? '1 year ago' : `${years} years ago`);
   }
   if (months > 0) {
-    return months === 1 ? '1 month ago' : `${months} months ago`;
+    return isZh ? `${months}个月前` : (months === 1 ? '1 month ago' : `${months} months ago`);
   }
   if (weeks > 0) {
-    return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+    return isZh ? `${weeks}周前` : (weeks === 1 ? '1 week ago' : `${weeks} weeks ago`);
   }
   if (days > 0) {
-    return days === 1 ? '1 day ago' : `${days} days ago`;
+    return isZh ? `${days}天前` : (days === 1 ? '1 day ago' : `${days} days ago`);
   }
   if (hours > 0) {
-    return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+    return isZh ? `${hours}小时前` : (hours === 1 ? '1 hour ago' : `${hours} hours ago`);
   }
   if (minutes > 0) {
-    return minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
+    return isZh ? `${minutes}分钟前` : (minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`);
   }
   if (seconds > 0) {
-    return seconds === 1 ? '1 second ago' : `${seconds} seconds ago`;
+    return isZh ? `${seconds}秒前` : (seconds === 1 ? '1 second ago' : `${seconds} seconds ago`);
   }
   
-  return 'just now';
-} 
+  return isZh ? '刚刚' : 'just now';
+}
+ 

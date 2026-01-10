@@ -1295,16 +1295,26 @@ pub async fn cleanup_finished_processes(db: State<'_, AgentDb>) -> Result<Vec<i6
         // Check if the process is still running
         let is_running = if cfg!(target_os = "windows") {
             // On Windows, use tasklist to check if process exists
-            match std::process::Command::new("tasklist")
-                .args(["/FI", &format!("PID eq {}", pid)])
-                .args(["/FO", "CSV"])
-                .output()
+            #[cfg(target_os = "windows")]
             {
-                Ok(output) => {
-                    let output_str = String::from_utf8_lossy(&output.stdout);
-                    output_str.lines().count() > 1 // Header + process line if exists
+                use std::os::windows::process::CommandExt;
+                const CREATE_NO_WINDOW: u32 = 0x08000000;
+                match std::process::Command::new("tasklist")
+                    .args(["/FI", &format!("PID eq {}", pid)])
+                    .args(["/FO", "CSV"])
+                    .creation_flags(CREATE_NO_WINDOW)
+                    .output()
+                {
+                    Ok(output) => {
+                        let output_str = String::from_utf8_lossy(&output.stdout);
+                        output_str.lines().count() > 1 // Header + process line if exists
+                    }
+                    Err(_) => false,
                 }
-                Err(_) => false,
+            }
+            #[cfg(not(target_os = "windows"))]
+            {
+                false
             }
         } else {
             // On Unix-like systems, use kill -0 to check if process exists
@@ -1649,6 +1659,14 @@ fn create_command_with_env(program: &str) -> Command {
 
     // Create a new tokio Command from the program path
     let mut tokio_cmd = Command::new(program);
+
+    // Windows: 隐藏 CMD 窗口
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        tokio_cmd.creation_flags(CREATE_NO_WINDOW);
+    }
 
     // Copy over all environment variables from the std::process::Command
     // This is a workaround since we can't directly convert between the two types

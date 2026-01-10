@@ -623,6 +623,14 @@ pub fn create_command_with_env(program: &str) -> Command {
 
     info!("Creating command for: {}", program);
 
+    // Windows: 隐藏 CMD 窗口
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+
     // Inherit essential environment variables from parent process
     for (key, value) in std::env::vars() {
         // Pass through PATH and other essential environment variables
@@ -691,3 +699,4 @@ pub fn create_command_with_env(program: &str) -> Command {
 
     cmd
 }
+

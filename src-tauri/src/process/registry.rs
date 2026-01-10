@@ -366,9 +366,23 @@ impl ProcessRegistry {
         info!("Attempting to kill process {} by PID {}", run_id, pid);
 
         let kill_result = if cfg!(target_os = "windows") {
-            std::process::Command::new("taskkill")
-                .args(["/F", "/PID", &pid.to_string()])
-                .output()
+            // Windows: 使用 taskkill 并隐藏 CMD 窗口
+            #[cfg(target_os = "windows")]
+            {
+                use std::os::windows::process::CommandExt;
+                const CREATE_NO_WINDOW: u32 = 0x08000000;
+                std::process::Command::new("taskkill")
+                    .args(["/F", "/PID", &pid.to_string()])
+                    .creation_flags(CREATE_NO_WINDOW)
+                    .output()
+            }
+            #[cfg(not(target_os = "windows"))]
+            {
+                // 这段代码不会在 Windows 以外的系统上执行
+                std::process::Command::new("taskkill")
+                    .args(["/F", "/PID", &pid.to_string()])
+                    .output()
+            }
         } else {
             // First try SIGTERM
             let term_result = std::process::Command::new("kill")

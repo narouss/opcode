@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { 
+import {
   FolderOpen,
   ChevronLeft,
   ChevronRight
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { Project } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useTranslation } from 'react-i18next';
 
 interface ProjectListProps {
   /**
@@ -52,7 +53,7 @@ const getDisplayPath = (path: string, maxLength: number = 30): string => {
   for (const indicator of homeIndicators) {
     if (path.includes(indicator)) {
       const parts = path.split('/');
-      const userIndex = parts.findIndex((_part, i) => 
+      const userIndex = parts.findIndex((_part, i) =>
         i > 0 && parts[i - 1] === indicator.split('/')[1]
       );
       if (userIndex > 0) {
@@ -62,14 +63,14 @@ const getDisplayPath = (path: string, maxLength: number = 30): string => {
       }
     }
   }
-  
+
   // Truncate if too long
   if (displayPath.length > maxLength) {
     const start = displayPath.substring(0, Math.floor(maxLength / 2) - 2);
     const end = displayPath.substring(displayPath.length - Math.floor(maxLength / 2) + 2);
     return `${start}...${end}`;
   }
-  
+
   return displayPath;
 };
 
@@ -89,23 +90,24 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   onOpenProject,
   className,
 }) => {
+  const { t } = useTranslation();
   const [showAll, setShowAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   // Determine how many projects to show
   const projectsPerPage = showAll ? 10 : 5;
   const totalPages = Math.ceil(projects.length / projectsPerPage);
-  
+
   // Calculate which projects to display
   const startIndex = showAll ? (currentPage - 1) * projectsPerPage : 0;
   const endIndex = startIndex + projectsPerPage;
   const displayedProjects = projects.slice(startIndex, endIndex);
-  
+
   const handleViewAll = () => {
     setShowAll(true);
     setCurrentPage(1);
   };
-  
+
   const handleViewLess = () => {
     setShowAll(false);
     setCurrentPage(1);
@@ -118,9 +120,9 @@ export const ProjectList: React.FC<ProjectListProps> = ({
         <div className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Projects</h1>
+              <h1 className="text-3xl font-bold">{t('projects.title')}</h1>
               <p className="mt-1 text-body-small text-muted-foreground">
-                Select a project to start working with Claude Code
+                {t('projects.selectProject')}
               </p>
             </div>
             <motion.div
@@ -133,7 +135,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                 className="flex items-center gap-2"
               >
                 <FolderOpen className="h-4 w-4" />
-                Open Project
+                {t('projects.openProject')}
               </Button>
             </motion.div>
           </div>
@@ -145,99 +147,99 @@ export const ProjectList: React.FC<ProjectListProps> = ({
           {displayedProjects.length > 0 ? (
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-heading-4">Recent Projects</h2>
-            {!showAll ? (
-              <button 
-                onClick={handleViewAll}
-                className="text-caption text-muted-foreground hover:text-foreground transition-colors"
-              >
-                View all ({projects.length})
-              </button>
-            ) : (
-              <button 
-                onClick={handleViewLess}
-                className="text-caption text-muted-foreground hover:text-foreground transition-colors"
-              >
-                View less
-              </button>
-            )}
-          </div>
-          
-          <div className="space-y-1">
-            {displayedProjects.map((project, index) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.15,
-                  delay: index * 0.02,
-                }}
-                className="group"
-              >
-                <motion.button
-                  onClick={() => onProjectClick(project)}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ duration: 0.15 }}
-                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent/50 transition-colors flex items-center justify-between"
-                >
-                  <span className="text-body-small font-medium">
-                    {getProjectName(project.path)}
-                  </span>
-                  <span className="text-caption text-muted-foreground font-mono text-right" style={{ minWidth: '200px' }}>
-                    {getDisplayPath(project.path, 35)}
-                  </span>
-                </motion.button>
-              </motion.div>
-            ))}
-          </div>
-          
-          {/* Pagination controls */}
-          {showAll && totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6">
-              <motion.div
-                whileTap={{ scale: 0.97 }}
-                transition={{ duration: 0.15 }}
-              >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-              </motion.div>
-              
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                    className="w-8 h-8 p-0"
+                <h2 className="text-heading-4">{t('projects.recentProjects')}</h2>
+                {!showAll ? (
+                  <button
+                    onClick={handleViewAll}
+                    className="text-caption text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {page}
-                  </Button>
+                    View all ({projects.length})
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleViewLess}
+                    className="text-caption text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {t('common.viewLess')}
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                {displayedProjects.map((project, index) => (
+                  <motion.div
+                    key={project.id}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.15,
+                      delay: index * 0.02,
+                    }}
+                    className="group"
+                  >
+                    <motion.button
+                      onClick={() => onProjectClick(project)}
+                      whileTap={{ scale: 0.97 }}
+                      transition={{ duration: 0.15 }}
+                      className="w-full text-left px-3 py-2 rounded-md hover:bg-accent/50 transition-colors flex items-center justify-between"
+                    >
+                      <span className="text-body-small font-medium">
+                        {getProjectName(project.path)}
+                      </span>
+                      <span className="text-caption text-muted-foreground font-mono text-right" style={{ minWidth: '200px' }}>
+                        {getDisplayPath(project.path, 35)}
+                      </span>
+                    </motion.button>
+                  </motion.div>
                 ))}
               </div>
-              
-              <motion.div
-                whileTap={{ scale: 0.97 }}
-                transition={{ duration: 0.15 }}
-              >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </motion.div>
-            </div>
-          )}
+
+              {/* Pagination controls */}
+              {showAll && totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-6">
+                  <motion.div
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                  </motion.div>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className="w-8 h-8 p-0"
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
+
+                  <motion.div
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </motion.div>
+                </div>
+              )}
             </Card>
           ) : (
             <Card className="p-12">
@@ -245,9 +247,9 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                 <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                   <FolderOpen className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-heading-3 mb-2">No recent projects</h3>
+                <h3 className="text-heading-3 mb-2">{t('projects.noProjects')}</h3>
                 <p className="text-body-small text-muted-foreground mb-6">
-                  Open a project to get started with Claude Code
+                  {t('projects.openToStart')}
                 </p>
                 <motion.div
                   whileTap={{ scale: 0.97 }}
@@ -259,7 +261,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                     className="flex items-center gap-2"
                   >
                     <FolderOpen className="h-4 w-4" />
-                    Open Your First Project
+                    {t('projects.openFirstProject')}
                   </Button>
                 </motion.div>
               </div>

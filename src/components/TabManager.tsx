@@ -5,6 +5,7 @@ import { useTabState } from '@/hooks/useTabState';
 import { Tab, useTabContext } from '@/contexts/TabContext';
 import { cn } from '@/lib/utils';
 import { useTrackEvent } from '@/hooks';
+import { useTranslation } from 'react-i18next';
 
 interface TabItemProps {
   tab: Tab;
@@ -16,8 +17,9 @@ interface TabItemProps {
 }
 
 const TabItem: React.FC<TabItemProps> = ({ tab, isActive, onClose, onClick, isDragging = false, setDraggedTabId }) => {
+  const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
-  
+
   const getIcon = () => {
     switch (tab.type) {
       case 'chat':
@@ -85,7 +87,7 @@ const TabItem: React.FC<TabItemProps> = ({ tab, isActive, onClose, onClick, isDr
       <div className="flex-shrink-0">
         <Icon className="w-4 h-4" />
       </div>
-      
+
       {/* Tab Title */}
       <span className="flex-1 truncate text-xs font-medium min-w-0">
         {tab.title}
@@ -100,9 +102,9 @@ const TabItem: React.FC<TabItemProps> = ({ tab, isActive, onClose, onClick, isDr
         )}
 
         {tab.hasUnsavedChanges && !statusIcon && (
-          <span 
+          <span
             className="w-1.5 h-1.5 bg-primary rounded-full"
-            title="Unsaved changes"
+            title={t('tabs.unsavedChanges')}
           />
         )}
       </div>
@@ -119,7 +121,7 @@ const TabItem: React.FC<TabItemProps> = ({ tab, isActive, onClose, onClick, isDr
           "focus:outline-none focus:ring-1 focus:ring-destructive/50",
           (isHovered || isActive) ? "opacity-100" : "opacity-0"
         )}
-        title={`Close ${tab.title}`}
+        title={t('tabs.closeTab', { name: tab.title })}
         tabIndex={-1}
       >
         <X className="w-3 h-3" />
@@ -144,6 +146,8 @@ export const TabManager: React.FC<TabManagerProps> = ({ className }) => {
     canAddTab
   } = useTabState();
 
+  const { t } = useTranslation();
+
   // Access reorderTabs from context
   const { reorderTabs } = useTabContext();
 
@@ -151,7 +155,7 @@ export const TabManager: React.FC<TabManagerProps> = ({ className }) => {
   const [showLeftScroll, setShowLeftScroll] = useState(false);
   const [showRightScroll, setShowRightScroll] = useState(false);
   const [draggedTabId, setDraggedTabId] = useState<string | null>(null);
-  
+
   // Analytics tracking
   const trackEvent = useTrackEvent();
 
@@ -251,21 +255,21 @@ export const TabManager: React.FC<TabManagerProps> = ({ className }) => {
     // Find the positions that changed
     const oldOrder = tabs.map(tab => tab.id);
     const newOrderIds = newOrder.map(tab => tab.id);
-    
+
     // Find what moved
     const movedTabId = newOrderIds.find((id, index) => oldOrder[index] !== id);
     if (!movedTabId) return;
-    
+
     const oldIndex = oldOrder.indexOf(movedTabId);
     const newIndex = newOrderIds.indexOf(movedTabId);
-    
+
     if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
       // Use the context's reorderTabs function
       reorderTabs(oldIndex, newIndex);
       // Track the reorder event
-      trackEvent.featureUsed?.('tab_reorder', 'drag_drop', { 
-        from_index: oldIndex, 
-        to_index: newIndex 
+      trackEvent.featureUsed?.('tab_reorder', 'drag_drop', {
+        from_index: oldIndex,
+        to_index: newIndex
       });
     }
   };
@@ -306,7 +310,7 @@ export const TabManager: React.FC<TabManagerProps> = ({ className }) => {
       {showLeftScroll && (
         <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-muted/15 to-transparent pointer-events-none z-10" />
       )}
-      
+
       {/* Left scroll button */}
       <AnimatePresence>
         {showLeftScroll && (
@@ -320,7 +324,7 @@ export const TabManager: React.FC<TabManagerProps> = ({ className }) => {
               "transition-colors duration-200 flex items-center justify-center",
               "bg-background/80 backdrop-blur-sm shadow-sm border border-border/50"
             )}
-            title="Scroll tabs left"
+            title={t('tabs.scrollLeft')}
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M15 18l-6-6 6-6" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
@@ -355,7 +359,7 @@ export const TabManager: React.FC<TabManagerProps> = ({ className }) => {
               />
             ))}
           </Reorder.Group>
-          
+
           {/* New tab button - positioned right after tabs */}
           <motion.button
             onClick={handleNewTab}
@@ -369,7 +373,7 @@ export const TabManager: React.FC<TabManagerProps> = ({ className }) => {
                 ? "hover:bg-muted/60 text-muted-foreground hover:text-foreground"
                 : "opacity-50 cursor-not-allowed text-muted-foreground"
             )}
-            title={canAddTab() ? "New project (Ctrl+T)" : "Maximum tabs reached"}
+            title={canAddTab() ? t('tabs.newProject') : t('tabs.maxTabs')}
           >
             <Plus className="w-4 h-4" />
           </motion.button>
@@ -394,7 +398,7 @@ export const TabManager: React.FC<TabManagerProps> = ({ className }) => {
               "transition-colors duration-200 flex items-center justify-center",
               "bg-background/80 backdrop-blur-sm shadow-sm border border-border/50"
             )}
-            title="Scroll tabs right"
+            title={t('tabs.scrollRight')}
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M9 18l6-6-6-6" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />

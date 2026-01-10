@@ -238,6 +238,14 @@ fn create_command_with_env(program: &str) -> Command {
     // Create a new tokio Command from the program path
     let mut tokio_cmd = Command::new(program);
 
+    // Windows: 隐藏 CMD 窗口
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        tokio_cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+
     // Copy over all environment variables
     for (key, value) in std::env::vars() {
         if key == "PATH"

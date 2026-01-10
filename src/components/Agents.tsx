@@ -18,6 +18,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { GitHubAgentBrowser } from '@/components/GitHubAgentBrowser';
 import { CreateAgent } from '@/components/CreateAgent';
 import { useTabState } from '@/hooks/useTabState';
+import { useTranslation } from 'react-i18next';
 
 export const Agents: React.FC = () => {
   const [activeTab, setActiveTab] = useState('agents');
@@ -31,6 +32,7 @@ export const Agents: React.FC = () => {
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [showGitHubBrowser, setShowGitHubBrowser] = useState(false);
   const { createAgentTab } = useTabState();
+  const { t } = useTranslation();
 
   // Load agents on mount
   useEffect(() => {
@@ -74,10 +76,10 @@ export const Agents: React.FC = () => {
       setToast({ message: 'Agent ID is missing', type: 'error' });
       return;
     }
-    
+
     // Import the dialog function
     const { open } = await import('@tauri-apps/plugin-dialog');
-    
+
     try {
       // Prompt user to select a project directory
       const projectPath = await open({
@@ -85,18 +87,18 @@ export const Agents: React.FC = () => {
         multiple: false,
         title: `Select project directory for ${agent.name}`
       });
-      
+
       if (!projectPath) {
         // User cancelled
         return;
       }
-      
+
       // Dispatch event to open agent execution in a new tab
       const tabId = `agent-exec-${agent.id}-${Date.now()}`;
-      window.dispatchEvent(new CustomEvent('open-agent-execution', { 
-        detail: { agent, tabId, projectPath } 
+      window.dispatchEvent(new CustomEvent('open-agent-execution', {
+        detail: { agent, tabId, projectPath }
       }));
-      
+
       setToast({ message: `Opening agent: ${agent.name}`, type: 'success' });
     } catch (error) {
       console.error('Failed to open agent:', error);
@@ -106,7 +108,7 @@ export const Agents: React.FC = () => {
 
   const handleDeleteAgent = async () => {
     if (!agentToDelete || !agentToDelete.id) return;
-    
+
     try {
       await api.deleteAgent(agentToDelete.id);
       setToast({ message: `Deleted agent: ${agentToDelete.name}`, type: 'success' });
@@ -175,7 +177,7 @@ export const Agents: React.FC = () => {
   // Show CreateAgent component if creating
   if (showCreateAgent) {
     return (
-      <CreateAgent 
+      <CreateAgent
         onBack={() => setShowCreateAgent(false)}
         onAgentCreated={() => {
           setShowCreateAgent(false);
@@ -206,9 +208,9 @@ export const Agents: React.FC = () => {
         <div className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
+              <h1 className="text-3xl font-bold tracking-tight">{t('agents.title')}</h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                Manage your Claude Code agents
+                {t('agents.manageAgents')}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -216,25 +218,25 @@ export const Agents: React.FC = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline">
                     <Import className="w-4 h-4 mr-2" />
-                    Import
+                    {t('agents.import')}
                     <ChevronDown className="w-4 h-4 ml-2" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={handleImportFromFile}>
                     <FileJson className="w-4 h-4 mr-2" />
-                    From File
+                    {t('agents.fromFile')}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setShowGitHubBrowser(true)}>
                     <Globe className="w-4 h-4 mr-2" />
-                    From GitHub
+                    {t('agents.fromGitHub')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
               <Button onClick={() => setShowCreateAgent(true)}>
                 <Plus className="w-4 h-4 mr-2" />
-                Create Agent
+                {t('agents.createAgent')}
               </Button>
             </div>
           </div>
@@ -249,8 +251,8 @@ export const Agents: React.FC = () => {
               exit={{ opacity: 0, y: -10 }}
               className="mx-6 mb-4"
             >
-              <Toast 
-                message={toast.message} 
+              <Toast
+                message={toast.message}
                 type={toast.type}
                 onDismiss={() => setToast(null)}
               />
@@ -258,56 +260,56 @@ export const Agents: React.FC = () => {
           )}
         </AnimatePresence>
 
-      {showGitHubBrowser && (
-        <GitHubAgentBrowser
-          isOpen={showGitHubBrowser}
-          onClose={() => setShowGitHubBrowser(false)}
-          onImportSuccess={() => {
-            loadAgents();
-            setShowGitHubBrowser(false);
-            setToast({ message: 'Agent imported successfully', type: 'success' });
-          }}
-        />
-      )}
-
-      <AnimatePresence>
-        {showDeleteDialog && agentToDelete && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center"
-            onClick={() => setShowDeleteDialog(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-card p-6 rounded-lg shadow-lg max-w-md w-full mx-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="text-lg font-semibold mb-4">Delete Agent</h3>
-              <p className="text-muted-foreground mb-6">
-                Are you sure you want to delete "{agentToDelete.name}"? This action cannot be undone.
-              </p>
-              <div className="flex gap-3 justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDeleteDialog(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleDeleteAgent}
-                >
-                  Delete
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
+        {showGitHubBrowser && (
+          <GitHubAgentBrowser
+            isOpen={showGitHubBrowser}
+            onClose={() => setShowGitHubBrowser(false)}
+            onImportSuccess={() => {
+              loadAgents();
+              setShowGitHubBrowser(false);
+              setToast({ message: 'Agent imported successfully', type: 'success' });
+            }}
+          />
         )}
-      </AnimatePresence>
+
+        <AnimatePresence>
+          {showDeleteDialog && agentToDelete && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center"
+              onClick={() => setShowDeleteDialog(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-card p-6 rounded-lg shadow-lg max-w-md w-full mx-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-lg font-semibold mb-4">{t('agents.deleteAgent')}</h3>
+                <p className="text-muted-foreground mb-6">
+                  {t('agents.deleteConfirm', { name: agentToDelete.name })}
+                </p>
+                <div className="flex gap-3 justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowDeleteDialog(false)}
+                  >
+                    {t('common.cancel')}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteAgent}
+                  >
+                    {t('common.delete')}
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
@@ -315,15 +317,15 @@ export const Agents: React.FC = () => {
             <TabsList className="grid grid-cols-2 w-full max-w-md mb-6 h-auto p-1">
               <TabsTrigger value="agents" className="py-2.5 px-3">
                 <Bot className="w-4 h-4 mr-2" />
-                Agents ({agents.length})
+                {t('agents.agents')} ({agents.length})
               </TabsTrigger>
               <TabsTrigger value="running" className="py-2.5 px-3">
                 <History className="w-4 h-4 mr-2" />
-                History ({runningAgents.length})
+                {t('agents.history')} ({runningAgents.length})
               </TabsTrigger>
             </TabsList>
 
-          <TabsContent value="agents" className="flex-1 overflow-hidden">
+            <TabsContent value="agents" className="flex-1 overflow-hidden">
               {loading ? (
                 <div className="flex items-center justify-center h-64">
                   <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -331,13 +333,13 @@ export const Agents: React.FC = () => {
               ) : agents.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-64 text-center">
                   <Bot className="w-12 h-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Agents Yet</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('agents.noAgents')}</h3>
                   <p className="text-muted-foreground mb-4">
-                    Create your first agent to get started
+                    {t('agents.createFirst')}
                   </p>
                   <Button onClick={() => setShowCreateAgent(true)}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Create Agent
+                    {t('agents.createAgent')}
                   </Button>
                 </div>
               ) : (
@@ -361,17 +363,17 @@ export const Agents: React.FC = () => {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => setEditingAgent(agent)}>
                               <Edit className="w-4 h-4 mr-2" />
-                              Edit
+                              {t('common.edit')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleRunAgent(agent)}>
                               <Play className="w-4 h-4 mr-2" />
-                              Run
+                              {t('agents.run')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleExportAgent(agent)}>
                               <Download className="w-4 h-4 mr-2" />
-                              Export
+                              {t('agents.export')}
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => {
                                 setAgentToDelete(agent);
                                 setShowDeleteDialog(true);
@@ -379,7 +381,7 @@ export const Agents: React.FC = () => {
                               className="text-destructive"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              Delete
+                              {t('common.delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -398,7 +400,7 @@ export const Agents: React.FC = () => {
                           onClick={() => handleRunAgent(agent)}
                         >
                           <Play className="w-3 h-3 mr-1" />
-                          Run
+                          {t('agents.run')}
                         </Button>
                       </div>
                     </Card>
@@ -412,9 +414,9 @@ export const Agents: React.FC = () => {
                 <Card className="p-12">
                   <div className="flex flex-col items-center justify-center text-center">
                     <History className="w-12 h-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Agent History</h3>
+                    <h3 className="text-lg font-semibold mb-2">{t('agents.noHistory')}</h3>
                     <p className="text-muted-foreground">
-                      Run an agent to see it here
+                      {t('agents.runToSee')}
                     </p>
                   </div>
                 </Card>
@@ -445,22 +447,22 @@ export const Agents: React.FC = () => {
 
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
-                          <span className="text-muted-foreground">Started:</span>
+                          <span className="text-muted-foreground">{t('agents.started')}:</span>
                           <p className="font-medium">{new Date(run.created_at).toLocaleString()}</p>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Duration:</span>
+                          <span className="text-muted-foreground">{t('agents.duration')}:</span>
                           <p className="font-medium">{run.metrics?.duration_ms ? `${(run.metrics.duration_ms / 1000).toFixed(1)}s` : run.duration_ms ? `${(run.duration_ms / 1000).toFixed(1)}s` : '—'}</p>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Tokens:</span>
+                          <span className="text-muted-foreground">{t('agents.tokens')}:</span>
                           <p className="font-medium">{run.metrics?.total_tokens ? run.metrics.total_tokens.toLocaleString() : run.total_tokens ? run.total_tokens.toLocaleString() : '—'}</p>
                         </div>
                       </div>
 
                       {run.status === 'failed' && (
                         <div className="mt-3 p-2 bg-destructive/10 rounded text-sm text-destructive">
-                          Agent execution failed
+                          {t('agents.executionFailed')}
                         </div>
                       )}
                     </Card>

@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import MDEditor from "@uiw/react-md-editor";
 import { type AgentIconName } from "./CCAgents";
 import { IconPicker, ICON_MAP } from "./IconPicker";
+import { useTranslation } from 'react-i18next';
 
 
 interface CreateAgentProps {
@@ -53,6 +54,7 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [showIconPicker, setShowIconPicker] = useState(false);
+  const { t } = useTranslation();
 
   const isEditMode = !!agent;
 
@@ -70,33 +72,33 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
     try {
       setSaving(true);
       setError(null);
-      
+
       if (isEditMode && agent.id) {
         await api.updateAgent(
-          agent.id, 
-          name, 
-          selectedIcon, 
-          systemPrompt, 
-          defaultTask || undefined, 
+          agent.id,
+          name,
+          selectedIcon,
+          systemPrompt,
+          defaultTask || undefined,
           model
         );
       } else {
         await api.createAgent(
-          name, 
-          selectedIcon, 
-          systemPrompt, 
-          defaultTask || undefined, 
+          name,
+          selectedIcon,
+          systemPrompt,
+          defaultTask || undefined,
           model
         );
       }
-      
+
       onAgentCreated();
     } catch (err) {
       console.error("Failed to save agent:", err);
       setError(isEditMode ? "Failed to update agent" : "Failed to create agent");
-      setToast({ 
-        message: isEditMode ? "Failed to update agent" : "Failed to create agent", 
-        type: "error" 
+      setToast({
+        message: isEditMode ? "Failed to update agent" : "Failed to create agent",
+        type: "error"
       });
     } finally {
       setSaving(false);
@@ -104,19 +106,19 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
   };
 
   const handleBack = () => {
-    if ((name !== (agent?.name || "") || 
-         selectedIcon !== (agent?.icon || "bot") || 
-         systemPrompt !== (agent?.system_prompt || "") ||
-         defaultTask !== (agent?.default_task || "") ||
-         model !== (agent?.model || "sonnet")) && 
-        !confirm("You have unsaved changes. Are you sure you want to leave?")) {
+    if ((name !== (agent?.name || "") ||
+      selectedIcon !== (agent?.icon || "bot") ||
+      systemPrompt !== (agent?.system_prompt || "") ||
+      defaultTask !== (agent?.default_task || "") ||
+      model !== (agent?.model || "sonnet")) &&
+      !confirm("You have unsaved changes. Are you sure you want to leave?")) {
       return;
     }
     onBack();
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.15 }}
@@ -143,14 +145,14 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
               </motion.div>
               <div>
                 <h1 className="text-heading-1">
-                  {isEditMode ? "Edit Agent" : "Create New Agent"}
+                  {isEditMode ? t('agents.editAgent') : t('agents.createNewAgent')}
                 </h1>
                 <p className="mt-1 text-body-small text-muted-foreground">
-                  {isEditMode ? "Update your Claude Code agent configuration" : "Configure a new Claude Code agent"}
+                  {isEditMode ? t('agents.updateConfig') : t('agents.configureNew')}
                 </p>
               </div>
             </div>
-            
+
             <motion.div
               whileTap={{ scale: 0.97 }}
               transition={{ duration: 0.15 }}
@@ -168,14 +170,14 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Save Agent
+                    {t('agents.saveAgent')}
                   </>
                 )}
               </Button>
             </motion.div>
           </div>
         </div>
-        
+
         {/* Error display */}
         {error && (
           <motion.div
@@ -189,18 +191,18 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
             <span className="text-caption text-destructive">{error}</span>
           </motion.div>
         )}
-        
+
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           <div className="space-y-4">
             {/* Basic Information */}
             <Card className="p-5">
               <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-heading-4">Basic Information</h3>
+                <h3 className="text-heading-4">{t('agents.basicInfo')}</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-caption text-muted-foreground">Agent Name</Label>
+                  <Label htmlFor="name" className="text-caption text-muted-foreground">{t('agents.agentName')}</Label>
                   <Input
                     id="name"
                     value={name}
@@ -210,9 +212,9 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
                     className="h-9"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label className="text-caption text-muted-foreground">Agent Icon</Label>
+                  <Label className="text-caption text-muted-foreground">{t('agents.agentIcon')}</Label>
                   <motion.div
                     whileTap={{ scale: 0.97 }}
                     transition={{ duration: 0.15 }}
@@ -237,7 +239,7 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
 
               {/* Model Selection */}
               <div className="space-y-2 mt-4">
-                <Label className="text-caption text-muted-foreground">Model</Label>
+                <Label className="text-caption text-muted-foreground">{t('agents.model')}</Label>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <motion.button
                     type="button"
@@ -246,8 +248,8 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
                     transition={{ duration: 0.15 }}
                     className={cn(
                       "flex-1 px-4 py-3 rounded-md border transition-all",
-                      model === "sonnet" 
-                        ? "border-primary bg-primary/10 text-primary" 
+                      model === "sonnet"
+                        ? "border-primary bg-primary/10 text-primary"
                         : "border-border hover:border-primary/50 hover:bg-accent"
                     )}
                   >
@@ -257,12 +259,12 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
                         model === "sonnet" ? "text-primary" : "text-muted-foreground"
                       )} />
                       <div className="text-left">
-                        <div className="text-body-small font-medium">Claude 4 Sonnet</div>
-                        <div className="text-caption text-muted-foreground">Faster, efficient for most tasks</div>
+                        <div className="text-body-small font-medium">{t('agents.sonnet4')}</div>
+                        <div className="text-caption text-muted-foreground">{t('agents.sonnet4Desc')}</div>
                       </div>
                     </div>
                   </motion.button>
-                  
+
                   <motion.button
                     type="button"
                     onClick={() => setModel("opus")}
@@ -270,8 +272,8 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
                     transition={{ duration: 0.15 }}
                     className={cn(
                       "flex-1 px-4 py-3 rounded-md border transition-all",
-                      model === "opus" 
-                        ? "border-primary bg-primary/10 text-primary" 
+                      model === "opus"
+                        ? "border-primary bg-primary/10 text-primary"
                         : "border-border hover:border-primary/50 hover:bg-accent"
                     )}
                   >
@@ -281,8 +283,8 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
                         model === "opus" ? "text-primary" : "text-muted-foreground"
                       )} />
                       <div className="text-left">
-                        <div className="text-body-small font-medium">Claude 4 Opus</div>
-                        <div className="text-caption text-muted-foreground">More capable, better for complex tasks</div>
+                        <div className="text-body-small font-medium">{t('agents.opus4')}</div>
+                        <div className="text-caption text-muted-foreground">{t('agents.opus4Desc')}</div>
                       </div>
                     </div>
                   </motion.button>
@@ -292,9 +294,9 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
 
             {/* Configuration */}
             <Card className="p-5">
-              <h3 className="text-heading-4 mb-4">Configuration</h3>
+              <h3 className="text-heading-4 mb-4">{t('agents.configuration')}</h3>
               <div className="space-y-2">
-                <Label htmlFor="default-task" className="text-caption text-muted-foreground">Default Task (Optional)</Label>
+                <Label htmlFor="default-task" className="text-caption text-muted-foreground">{t('agents.defaultTaskOptional')}</Label>
                 <Input
                   id="default-task"
                   type="text"
@@ -312,9 +314,9 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
             {/* System Prompt */}
             <Card className="p-5">
               <div className="mb-4">
-                <h3 className="text-heading-4 mb-1">System Prompt</h3>
+                <h3 className="text-heading-4 mb-1">{t('agents.systemPrompt')}</h3>
                 <p className="text-caption text-muted-foreground">
-                  Define the behavior and capabilities of your Claude Code agent
+                  {t('agents.systemPromptDesc')}
                 </p>
               </div>
               <div className="rounded-md border border-border overflow-hidden" data-color-mode="dark">
@@ -330,7 +332,7 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
           </div>
         </div>
       </div>
-  
+
       {/* Toast Notification */}
       <ToastContainer>
         {toast && (
